@@ -1,53 +1,58 @@
 #ifndef MENU_H
 #define MENU_H
 
-const float voltageDividerFactor = 2.0;  // Divider factor (R1/R2 ratio)
-const int adcResolution = 4095;          // 12-bit ADC resolution for ESP32
-const float adcReferenceVoltage = 3.3;   // ESP32 ADC reference voltage (typically 3.3V)
+const float resistorRatio = 1.480;      // Voltage divider ratio (R1/R2)
+const int adcResolution = 4095;         // 12-bit ADC resolution for ESP32
+const float adcReferenceVoltage = 3.3;  // ESP32 ADC reference voltage (typically 3.3V)
+
+// Function to read battery voltage
+float readBatteryVoltage() {
+  int analogValue = analogRead(BATT);  // Read ADC value
+  // Calculate battery voltage using the voltage divider factor
+  float batteryVoltage = (analogValue / (float)adcResolution) * adcReferenceVoltage * resistorRatio;
+  return batteryVoltage;
+}
 
 // Function to read and display the battery voltage
 void Batt() {
-  int adcValue = analogRead(BATT);  // Read ADC value
-  // Convert ADC value to battery voltage
-  float batteryVoltage = (adcValue / (float)adcResolution) * adcReferenceVoltage * voltageDividerFactor;
+  float batteryVoltage = readBatteryVoltage();  // Get the battery voltage
 
-  // Display battery voltage
+  // Display the battery voltage in the serial monitor
   Serial.print("Battery Voltage: ");
   Serial.print(batteryVoltage);
   Serial.println(" V");
 
-  u8g2.setCursor(80,55);
-  u8g2.print("B+: ");
-  u8g2.print(batteryVoltage);
+  // Display the battery voltage on the screen
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_helvB08_tr);
+  u8g2.setCursor(60, 55);
+  u8g2.print("B+ ");
+  u8g2.print(batteryVoltage, 2);  // Display voltage with two decimal points
   u8g2.print(" V");
 }
 
 // Function to display the clock
 void Clock() {
-  // Get hours, minutes, and seconds
   int hours = timeClient.getHours();
 
-  if (hours >= 24) {  // Handle hour overflow
-    hours -= 24;      // Wrap back to 00:00
+  if (hours >= 24) {
+    hours -= 24;
   }
 
   int minutes = timeClient.getMinutes();
   int seconds = timeClient.getSeconds();
 
-  // Convert to 12-hour format and determine AM/PM
   String period = "AM";
   if (hours >= 12) {
     period = "PM";
-    if (hours > 12) hours -= 12;  // Convert to 12-hour time
+    if (hours > 12) hours -= 12;
   } else if (hours == 0) {
-    hours = 12;  // Handle midnight as 12 AM
+    hours = 12;
   }
 
-  // Format the time with the adjusted hour (12-hour format)
   char timeBuffer[9];
   sprintf(timeBuffer, "%02d:%02d:%02d", hours, minutes, seconds);
 
-  // Get the day of the week as a word (0 = Sunday, 1 = Monday, ...)
   String dayOfWeek;
   int day = timeClient.getDay();
   switch (day) {
@@ -60,16 +65,31 @@ void Clock() {
     case 6: dayOfWeek = "Saturday"; break;
   }
 
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_courR10_tr);
+  u8g2.setFont(u8g2_font_fub14_tf);
   u8g2.drawFrame(1, 1, 127, 63);
   u8g2.setCursor(10, 25);
   u8g2.print(timeBuffer);
   u8g2.print(" ");
   u8g2.print(period);
   u8g2.setCursor(10, 50);
-  u8g2.setFont(u8g2_font_ncenB12_tr);
+  u8g2.setFont(u8g2_font_helvB08_tr);
   u8g2.print(dayOfWeek);
+
+  if (hours == 5 && minutes == 21) {
+    u8g2.clearBuffer();
+    u8g2.setDrawColor(1);
+
+    u8g2.drawBox(0, 0, 127, 63);
+    u8g2.setCursor(30, 20);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(u8g2_font_fub11_tf);
+    u8g2.print("4:20");
+    u8g2.setCursor(30, 30);
+    u8g2.print("Bitches");
+    pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
+    pixels.show();
+    u8g2.sendBuffer();
+  }
 }
 
 // Menu function

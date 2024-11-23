@@ -2,8 +2,8 @@
 #define PINS_H
 
 
-#define LED 10
-#define BATT 5
+#define LED 5
+#define BATT 2
 
 #define BUTTON1 0
 #define BUTTON2 1
