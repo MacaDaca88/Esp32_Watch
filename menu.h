@@ -74,6 +74,10 @@ void Clock() {
   u8g2.setCursor(10, 50);
   u8g2.setFont(u8g2_font_helvB08_tr);
   u8g2.print(dayOfWeek);
+  u8g2.setFont(u8g2_font_helvB08_tr);
+  u8g2.setCursor(30, 40);
+  u8g2.print("Fake Rolex ");
+
 
   if (hours == 5 && minutes == 21) {
     u8g2.clearBuffer();

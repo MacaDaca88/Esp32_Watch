@@ -10,18 +10,10 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 46800, 14400000);
 
-int button1 = 0;
-int button2 = 0;
-int button3 = 0;
-
-int button1State = 0;
-int button2State = 0;
-int button3State = 0;
-
 int Time = 0;
 int oldTime = 0;
-
 #include "Led.h"
+#include "Button.h"
 #include "menu.h"
 
 const uint8_t pacmanBitmap[] PROGMEM = {
@@ -110,17 +102,16 @@ void loop() {
   ArduinoOTA.handle();
 
   Time = millis();
-  button1 = digitalRead(BUTTON1);
-  button2 = digitalRead(BUTTON2);
-  button3 = digitalRead(BUTTON3);
+
   u8g2.setDrawColor(1);
-light();
+  button();
+  light();
+
   Batt();
   Menu();
 
   if (WiFi.status() == WL_CONNECTED) {
     drawWifiSymbol();  // Show Wi-Fi symbol if connected
-
     timeClient.update();
   } else {
     // If no WiFi connection, draw a line through the symbol
