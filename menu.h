@@ -79,7 +79,7 @@ void Clock() {
   u8g2.print("Fake Rolex ");
 
 
-  if (hours == 5 && minutes == 21) {
+  if (hours == 4 && minutes == 20) {
     u8g2.clearBuffer();
     u8g2.setDrawColor(1);
 
@@ -91,6 +91,21 @@ void Clock() {
     u8g2.setCursor(30, 30);
     u8g2.print("Bitches");
     pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
+    pixels.show();
+    u8g2.sendBuffer();
+  }
+    if (hours == 7 && minutes == 30 && period == "AM") {
+    u8g2.clearBuffer();
+    u8g2.setDrawColor(1);
+
+    u8g2.drawBox(0, 0, 127, 63);
+    u8g2.setCursor(30, 20);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(u8g2_font_fub11_tf);
+    u8g2.print("Wakey");
+    u8g2.setCursor(30, 30);
+    u8g2.print("Wakey");
+    pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // Green
     pixels.show();
     u8g2.sendBuffer();
   }

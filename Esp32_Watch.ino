@@ -65,37 +65,10 @@ void setup() {
   u8g2.sendBuffer();
   delay(1000);
   u8g2.drawStr(0, 30, " HacKing Mainframe. ");
-
-  pixels.setPixelColor(0, pixels.Color(255, 0, 0));  // Red
-  pixels.show();
-  u8g2.sendBuffer();
-  delay(500);
-  pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
-  pixels.show();
-  u8g2.print(". ");
-  u8g2.sendBuffer();
-  delay(500);
-  pixels.setPixelColor(0, pixels.Color(0, 0, 255));  // Blue
-  pixels.show();
-  u8g2.print(". ");
-  u8g2.sendBuffer();
-  delay(500);
-  pixels.setPixelColor(0, pixels.Color(255, 255, 0));  // Gold
-  pixels.show();
-  u8g2.print(". ");
-  u8g2.sendBuffer();
-  delay(500);
-  pixels.setPixelColor(0, pixels.Color(0, 255, 255));  // Aqua
-  pixels.show();
-  u8g2.print(". ");
-  u8g2.sendBuffer();
-  delay(500);
-  pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // White
-  pixels.show();
-  delay(500);
-  pixels.setPixelColor(0, pixels.Color(0, 0, 0));  // Off
-  pixels.show();
+  ledStart();
   u8g2.clearBuffer();
+  // Enable Wi-Fi power saving
+  WiFi.setSleep(false);
 }
 
 void loop() {
@@ -109,14 +82,31 @@ void loop() {
 
   Batt();
   Menu();
+  timeClient.update();
 
   if (WiFi.status() == WL_CONNECTED) {
     drawWifiSymbol();  // Show Wi-Fi symbol if connected
-    timeClient.update();
   } else {
     // If no WiFi connection, draw a line through the symbol
-    u8g2.drawLine(115 - 10, 55 - 10, 115 + 10, 55 + 10);  // Diagonal line through symbol
+    u8g2.drawLine(115 + 10, 55 + 10, 115 - 10, 55 - 10);  // Diagonal line through symbol
     Menu();
+  }
+  // Enter light sleep for short periods if no active task and OTA is not in progress
+  if (!otaInProgress) {
+    Serial.println("Entering light sleep...");
+
+    u8g2.setCursor(10, 10);
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawStr(0, 10, " Sleeping. ");
+    u8g2.sendBuffer();
+    esp_sleep_enable_timer_wakeup(500000);  // Wake after 500 ms
+    esp_light_sleep_start();
+    Serial.println("Woke up from light sleep.");
+
+    u8g2.setCursor(10, 10);
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawStr(0, 10, " Awake. ");
+    u8g2.sendBuffer();
   }
 }
 

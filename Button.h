@@ -21,11 +21,15 @@ void button() {
   if (button2 != button2State && button2 == LOW) {
     led = !led;
   }
-  button2State = button2;
 
   if (button2 == LOW && (buttonTime - oldButtonTime >= 2000)) {
     ledFlash = !ledFlash; // Toggle flashing mode
     oldButtonTime = buttonTime; // Reset to avoid multiple toggles
   }
-  oldButtonTime = buttonTime;
+    if (button2 == LOW && (buttonTime - oldButtonTime >= 5000)) {
+    ledFlashColor = !ledFlashColor; // Toggle flashing mode
+    oldButtonTime = buttonTime; // Reset to avoid multiple toggles
+  }
+  button2State = button2;
+
 }
