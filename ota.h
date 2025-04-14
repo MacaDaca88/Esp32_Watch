@@ -9,6 +9,7 @@ const char* ssid = "Tip-jar";
 const char* password = "PASSWORD1234LOL";
 
 bool otaInProgress = false;
+bool wifiState = false;
 
 void OTAinit() {
   WiFi.mode(WIFI_STA);
@@ -39,16 +40,13 @@ void OTAinit() {
         type = "sketch";
       else  // U_SPIFFS
         type = "filesystem";
-    otaInProgress = true; // Set the flag to true
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
+      otaInProgress = true;  // Set the flag to true
+
     })
     .onEnd([]() {
-        otaInProgress = false; // Reset the flag
-      Serial.println("\nEnd");
+      otaInProgress = false;  // Reset the flag
     })
     .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
       u8g2.clearBuffer();
       u8g2.setFont(u8g2_font_ncenB08_tr);
       u8g2.setDrawColor(1);
@@ -62,7 +60,6 @@ void OTAinit() {
       u8g2.sendBuffer();
     })
     .onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
       u8g2.printf("Error[%u]: ", error);
 
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -74,9 +71,37 @@ void OTAinit() {
 
   ArduinoOTA.begin();
 
-  Serial.println("Ready");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+}
+void drawWifiSymbol() {
+  int x = 115;     // Center x-coordinate of Wi-Fi symbol
+  int y = 59;      // Center y-coordinate of Wi-Fi symbol
+  int radius = 9;  // Radius of the largest arc
+
+  if (WiFi.status() == WL_CONNECTED) {
+    // Draw Wi-Fi symbol
+    u8g2.drawCircle(x, y, 3, U8G2_DRAW_UPPER_RIGHT);
+    u8g2.drawCircle(x, y, 6, U8G2_DRAW_UPPER_RIGHT);
+    u8g2.drawCircle(x, y, 9, U8G2_DRAW_UPPER_RIGHT);
+    // Draw the filled disc at the center
+    u8g2.drawDisc(x, y, 2, U8G2_DRAW_ALL);
+    // Display network RSSI value near the symbol
+    u8g2.setCursor(x - 8, y - 15);
+    u8g2.setFont(u8g2_font_5x7_tr);
+    u8g2.print(WiFi.RSSI());
+  }
+}
+void handleWiFiState() {
+  if (wifiState) {
+    u8g2.setDrawColor(1);
+    u8g2.setCursor(30, 40);
+    u8g2.print("Turning Wi-Fi ON...");
+    WiFi.begin(ssid, password);
+  } else {
+    u8g2.setDrawColor(1);
+    u8g2.setCursor(30, 40);
+    u8g2.print("Turning Wi-Fi OFF...");
+    WiFi.disconnect();
+  }
 }
 
 #endif

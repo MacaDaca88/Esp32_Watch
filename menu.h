@@ -1,40 +1,12 @@
 #ifndef MENU_H
 #define MENU_H
 
-const float resistorRatio = 1.480;      // Voltage divider ratio (R1/R2)
-const int adcResolution = 4095;         // 12-bit ADC resolution for ESP32
-const float adcReferenceVoltage = 3.3;  // ESP32 ADC reference voltage (typically 3.3V)
 
-// Function to read battery voltage
-float readBatteryVoltage() {
-  int analogValue = analogRead(BATT);  // Read ADC value
-  // Calculate battery voltage using the voltage divider factor
-  float batteryVoltage = (analogValue / (float)adcResolution) * adcReferenceVoltage * resistorRatio;
-  return batteryVoltage;
-}
-
-// Function to read and display the battery voltage
-void Batt() {
-  float batteryVoltage = readBatteryVoltage();  // Get the battery voltage
-
-  // Display the battery voltage in the serial monitor
-  Serial.print("Battery Voltage: ");
-  Serial.print(batteryVoltage);
-  Serial.println(" V");
-
-  // Display the battery voltage on the screen
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_helvB08_tr);
-  u8g2.setCursor(60, 55);
-  u8g2.print("B+ ");
-  u8g2.print(batteryVoltage, 2);  // Display voltage with two decimal points
-  u8g2.print(" V");
-}
 
 // Function to display the clock
 void Clock() {
   int hours = timeClient.getHours();
-
+  menu = false;
   if (hours >= 24) {
     hours -= 24;
   }
@@ -65,17 +37,18 @@ void Clock() {
     case 6: dayOfWeek = "Saturday"; break;
   }
 
-  u8g2.setFont(u8g2_font_fub14_tf);
-  u8g2.drawFrame(1, 1, 127, 63);
-  u8g2.setCursor(10, 25);
+  u8g2.setFont(u8g2_font_osr18_tf);
+
+  u8g2.setCursor(5, 30);
   u8g2.print(timeBuffer);
-  u8g2.print(" ");
+
+  u8g2.setFont(u8g2_font_6x10_mf);
   u8g2.print(period);
-  u8g2.setCursor(10, 50);
-  u8g2.setFont(u8g2_font_helvB08_tr);
+  u8g2.setCursor(10, 59);
+  u8g2.setFont(u8g2_font_timR10_tf);
   u8g2.print(dayOfWeek);
-  u8g2.setFont(u8g2_font_helvB08_tr);
-  u8g2.setCursor(30, 40);
+  u8g2.setFont(u8g2_font_timR10_tf);
+  u8g2.setCursor(30, 45);
   u8g2.print("Fake Rolex ");
 
 
@@ -84,28 +57,28 @@ void Clock() {
     u8g2.setDrawColor(1);
 
     u8g2.drawBox(0, 0, 127, 63);
-    u8g2.setCursor(30, 20);
+    u8g2.setCursor(30, 25);
     u8g2.setDrawColor(0);
-    u8g2.setFont(u8g2_font_fub11_tf);
+    u8g2.setFont(u8g2_font_fub14_tf);
     u8g2.print("4:20");
-    u8g2.setCursor(30, 30);
+    u8g2.setCursor(30, 40);
     u8g2.print("Bitches");
     pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
     pixels.show();
     u8g2.sendBuffer();
   }
-    if (hours == 7 && minutes == 30 && period == "AM") {
+  if (hours == 7 && minutes == 30 && period == "AM") {
     u8g2.clearBuffer();
     u8g2.setDrawColor(1);
 
     u8g2.drawBox(0, 0, 127, 63);
     u8g2.setCursor(30, 20);
     u8g2.setDrawColor(0);
-    u8g2.setFont(u8g2_font_fub11_tf);
+    u8g2.setFont(u8g2_font_fub14_tf);
     u8g2.print("Wakey");
     u8g2.setCursor(30, 30);
     u8g2.print("Wakey");
-    pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // Green
+    pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // White
     pixels.show();
     u8g2.sendBuffer();
   }
@@ -113,20 +86,55 @@ void Clock() {
 
 // Menu function
 void Menu() {
-  if (button1 == 0) {
-    Serial.println("Button 1 Pressed");
-    u8g2.clearBuffer();
-    u8g2.sendBuffer();
 
-    u8g2.setDrawColor(1);
-    u8g2.drawBox(1, 1, 127, 63);
-    u8g2.setCursor(10, 10);
-    u8g2.print("IP");
+  if (menu) {
+    switch (menuState) {
+      case 0:
+        drawMenu();
+        menu = true;
+        break;
+      case 1:
 
-    u8g2.sendBuffer();
+        break;
+    }
   } else {
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(0, 0, 128, 64);
+    u8g2.setDrawColor(1);
+    u8g2.drawFrame(0, 0, 127, 63);
+    menu = false;
+
+    drawWifiSymbol();  // Show Wi-Fi symbol if connected
     Clock();
+    Batt();
+    light();
+
+    // Enter light sleep for short periods if no Wifi
+    if (!wifiState) {
+      setCpuFrequencyMhz(80);
+
+      // Sleep for 1 seconds
+      Serial.println("Entering light sleep...");
+      esp_sleep_enable_timer_wakeup(1 * 100000);  // Wake up after 1s
+      esp_light_sleep_start();                    // Go into light sleep
+
+      // Update the display if Asleep
+      u8g2.setCursor(10, 10);
+      u8g2.setFont(u8g2_font_5x7_tr);
+      u8g2.drawStr(0, 10, " Power Save ");
+      //u8g2.sendBuffer();
+    } else {
+      setCpuFrequencyMhz(240);
+
+      // Update the display if Awake
+      u8g2.setCursor(10, 10);
+      u8g2.setFont(u8g2_font_5x7_tr);
+      u8g2.drawStr(0, 10, " Awake ");
+      // u8g2.sendBuffer();
+    }
   }
+    u8g2.sendBuffer();
+
 }
 
 #endif
