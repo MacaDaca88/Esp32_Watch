@@ -3,13 +3,9 @@
 #define NUMPIXELS 1
 Adafruit_NeoPixel pixels(NUMPIXELS, LED, NEO_GRB + NEO_KHZ800);
 
-int ledMode = 0;  // LED mode (0 to 3)
+int ledMode = 0;  // LED mode (0 to 4)
 
-bool ledOFF = false;    // Indicates the LED's OFF state
-bool ledFlash = false;  // Indicates if the flashing mode is active
-bool led = false;       // Indicates the LED's steady state
-bool ledFlashColor = false;
-bool ledFlashColorRed = false;
+bool battFlat = false;
 bool battCharged = false;
 
 
@@ -53,44 +49,30 @@ void updateLEDMode() {
   unsigned long currentTime = millis();  // Get the current time
 
   switch (ledMode) {
-    case 0:                                            // LED OFF
-                                                       /*    led = false;
-      ledFlash = false;
-      ledFlashColor = false;
-      ledFlashColorRed = false;
-*/
+    case 0:  // LED OFF
+
       pixels.setPixelColor(0, pixels.Color(0, 0, 0));  // OFF
       pixels.show();
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
-      u8g2.setCursor(100, 10);
+      u8g2.setCursor(70, 10);
       u8g2.print("LED OFF");
-      u8g2.sendBuffer();
-
       break;
-    case 1:  // Solid LED
-      /*  led = true;
-      ledFlash = false;
-      ledFlashColor = false;
-      ledFlashColorRed = false;
-*/
+
+    case 1:  // Solid White LED
+
       pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // White
       pixels.show();
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
-      u8g2.setCursor(100, 10);
+      u8g2.setCursor(70, 10);
       u8g2.print("White");
-      u8g2.sendBuffer();
-
       break;
-    case 2:  // Flash LED
-             /*  ledFlash = true;
-      led = false;
-      ledFlashColor = false;
-      ledFlashColorRed = false;
-*/
+
+    case 2:  // Strobe White LED
+
       // Strobe flashing mode
-      if (currentTime - lastFlashTime >= 1000) {  //blink 1x per second
+      if (currentTime - lastFlashTime >= 50) {  //blink 20x per second
         // Toggle the LED state
         static bool flashState = false;  // Tracks the ON/OFF state of the flashing
         flashState = !flashState;
@@ -106,19 +88,25 @@ void updateLEDMode() {
       }
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
-      u8g2.setCursor(100, 10);
-      u8g2.print("Strobe");
-      u8g2.sendBuffer();
-
+      u8g2.setCursor(70, 10);
+      u8g2.print("White Strobe");
       break;
-    case 3:  // Flash LED with Color
-             /*    ledFlashColor = true;
-      led = false;
-      ledFlash = false;
-      ledFlashColorRed = false;
-*/
+
+    case 3:  // Solid Green Led
+
+      pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
+      pixels.show();
+
+      u8g2.setDrawColor(1);
+      u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
+      u8g2.setCursor(70, 10);
+      u8g2.print("Green");
+      break;
+
+    case 4:  // Strobe Green LED
+
       // Green flashing mode
-      if (currentTime - lastFlashTime >= 300) {  //blink 3x per second
+      if (currentTime - lastFlashTime >= 200) {  //blink 5x per second
         // Toggle the LED state
         static bool flashState = false;  // Tracks the ON/OFF state of the flashing
         flashState = !flashState;
@@ -134,78 +122,26 @@ void updateLEDMode() {
       }
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
-      u8g2.setCursor(100, 10);
-      u8g2.print("Green");
-      u8g2.sendBuffer();
-
+      u8g2.setCursor(70, 10);
+      u8g2.print("Green Strobe");
       break;
   }
 }
+
 void light() {
-  unsigned long currentTime = millis();  // Get the current time
-                                         /*
-  ledOFF = true;
+  unsigned long currentTime = millis();
 
-  if (ledOFF) {
-    // LED OFF.
-    pixels.setPixelColor(0, pixels.Color(0, 0, 0));  // OFF
-    pixels.show();
-  }
-  if (led) {
-    // LED steady ON.
-    pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // White
-    pixels.show();
-  }
-
-  if (ledFlash) {
-    // Strobe flashing mode
-    if (currentTime - lastFlashTime >= 1000) {  //blink 1x per second
-      // Toggle the LED state
-      static bool flashState = false;  // Tracks the ON/OFF state of the flashing
-      flashState = !flashState;
-
-      if (flashState) {
-        pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // White
-      } else {
-        //pixels.setPixelColor(0, pixels.Color(0, 0, 0));  // OFF
-      }
-      pixels.show();
-
-      lastFlashTime = currentTime;  // Update the last flash time
-    }
-  }
-
-  if (ledFlashColor) {
-    // Green flashing mode
-    if (currentTime - lastFlashTime >= 300) {  //blink 30x per second
-      // Toggle the LED state
-      static bool flashState = false;  // Tracks the ON/OFF state of the flashing
-      flashState = !flashState;
-
-      if (flashState) {
-        pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
-      } else {
-        //pixels.setPixelColor(0, pixels.Color(0, 0, 0));  // OFF
-      }
-      pixels.show();
-
-      lastFlashTime = currentTime;  // Update the last flash time
-    }
-  }
-  */
-  if (ledFlashColorRed) {
+  if (battFlat) {
     // Red flashing mode
-    if (currentTime - lastFlashTime >= 100) {  //blink 30x per second
+    if (currentTime - lastFlashTime >= 100) {  //blink 10x per second
       // Toggle the LED state
       static bool flashState = false;  // Tracks the ON/OFF state of the flashing
       flashState = !flashState;
 
       if (flashState) {
         pixels.setPixelColor(0, pixels.Color(255, 0, 0));  // Red
-      } else {
-        //  pixels.setPixelColor(0, pixels.Color(0, 0, 0));  // OFF
+        pixels.show();
       }
-      pixels.show();
 
       lastFlashTime = currentTime;  // Update the last flash time
     }
@@ -213,10 +149,5 @@ void light() {
   if (battCharged) {
     pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
     pixels.show();
-
-  } else {
-    //   pixels.setPixelColor(0, pixels.Color(0, 0, 0));  // OFF
-    //  pixels.show();
   }
-  //pixels.show();
 }

@@ -13,7 +13,7 @@ static bool button1Held = false;
 
 // Variables for menu navigation
 int menuState = 0;
-const char* menuItems[] = { "Ip Address", "Scan Wifi ", "Up-Time", "Item 4", "Item 5" };
+const char* menuItems[] = { "Ip Address", "Scan Wifi ", "Up-Time", "Clock Sync", "Weather" };
 const int menuLength = sizeof(menuItems) / sizeof(menuItems[0]);
 int currentSelection = 0;
 int menu = 0;
@@ -113,6 +113,89 @@ void handleMenuSelection() {
 
         delay(2000);  // Allow the user time to see the output
       }
+
+    case 3:  // Display Last Time updated
+      {
+        u8g2.clearBuffer();
+        u8g2.setDrawColor(1);
+        u8g2.setFont(u8g2_font_timR10_tf);
+        u8g2.setCursor(5, 10);
+
+        // Convert lastNtpEpoch to time struct
+        struct tm* timeinfo;
+        time_t rawtime = lastNtpEpoch;   // Your last sync time
+        timeinfo = localtime(&rawtime);  // Convert to time structure
+
+        // Create buffer for formatted date and time
+        char buffer[20];                                                  // Buffer to hold the formatted date and time string
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);  // Format as YYYY-MM-DD HH:MM:SS
+
+        // Display the formatted date and time
+        u8g2.print(buffer);
+
+        u8g2.sendBuffer();
+        delay(2000);  // Allow the user time to see the output
+
+        break;
+      }
+    case 4:  // Display Weather
+      {
+        if (WiFi.status() == WL_CONNECTED) {
+          HTTPClient http;
+          http.begin(url);  // Connect to the weather API
+
+          int httpCode = http.GET();  // Send GET request
+
+          if (httpCode == HTTP_CODE_OK) {       // If HTTP request is successful
+            String payload = http.getString();  // Get the response as a string
+
+            // Parse JSON data
+            DynamicJsonDocument doc(1024);
+            deserializeJson(doc, payload);
+
+            weatherDescription = doc["weather"][0]["description"].as<String>();  // Weather description
+            temperature = doc["main"]["temp"].as<float>();                       // Temperature
+            humidity = doc["main"]["humidity"].as<float>();                      // Humidity
+
+            // Display the weather data
+            u8g2.clearBuffer();
+            u8g2.setDrawColor(0);
+            u8g2.drawBox(0, 0, 127, 63);
+            u8g2.setDrawColor(1);
+            u8g2.setFont(u8g2_font_4x6_mf);
+            u8g2.setCursor(5, 10);
+            u8g2.print("Weather: " + weatherDescription);
+            u8g2.setFont(u8g2_font_timR10_tf);
+
+            u8g2.setCursor(10, 30);
+            u8g2.print("Temp: " + String(temperature) + " C");
+
+            u8g2.setCursor(10, 50);
+            u8g2.print("Humidity: " + String(humidity) + " %");
+
+            u8g2.sendBuffer();
+          } else {
+            u8g2.setCursor(10, 10);
+            u8g2.print("Failed to fetch");
+            u8g2.setCursor(10, 30);
+            u8g2.print("weather data.");
+            u8g2.sendBuffer();
+          }
+          http.end();   // Close the connection
+          delay(2000);  // Allow the user time to see the output
+
+        } else {
+          u8g2.clearBuffer();
+          u8g2.setDrawColor(1);
+          u8g2.setFont(u8g2_font_timR10_tf);
+          u8g2.setCursor(10, 10);
+          u8g2.print("No Wi-Fi connection");
+          u8g2.sendBuffer();
+          delay(2000);  // Allow the user time to see the output
+        }
+        break;
+      }
+
     default:
       break;
   }
@@ -134,7 +217,8 @@ void button() {
     if (button1 != button1State) {  // Toggle LED mode
       button1State = button1;
       if (button1 == HIGH) {          // Detect rising edge
-        ledMode = (ledMode + 1) % 4;  // Cycle LED modes (0 to 3)
+        ledMode = (ledMode + 1) % 5;  // Cycle LED modes (0 to 4)
+        delay(800);                   // Debounce delay
       }
     }
     if (button2 != button2State) {  // Toggle menu
@@ -164,24 +248,24 @@ void button() {
         delay(2000);  // Optional delay for button press effect
       }
     }
-    updateLEDMode();
+    // updateLEDMode();
 
   } else {                 // Menu active
     if (button1 == LOW) {  // Navigate up in the menu
       currentSelection--;
       if (currentSelection < 0) currentSelection = menuLength - 1;
       drawMenu();
-   //   delay(200);  // Debounce delay
+      delay(200);  // Debounce delay
     }
     if (button2 == LOW) {  // Select menu item
       handleMenuSelection();
-     // delay(200);  // Debounce delay
+      delay(200);  // Debounce delay
     }
     if (button3 == LOW) {  // Navigate down in the menu
       currentSelection++;
       if (currentSelection >= menuLength) currentSelection = 0;
       drawMenu();
-      //delay(200);  // Debounce delay
+      delay(200);  // Debounce delay
     }
     // Exit menu if a long press of button 2 is detected
     if (button2 == LOW && Time - oldTime >= 4000) {

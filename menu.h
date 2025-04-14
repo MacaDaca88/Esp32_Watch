@@ -53,7 +53,7 @@ void Clock() {
 
 
   if (hours == 4 && minutes == 20) {
-    u8g2.clearBuffer();
+
     u8g2.setDrawColor(1);
 
     u8g2.drawBox(0, 0, 127, 63);
@@ -66,9 +66,10 @@ void Clock() {
     pixels.setPixelColor(0, pixels.Color(0, 255, 0));  // Green
     pixels.show();
     u8g2.sendBuffer();
+    return;
   }
   if (hours == 7 && minutes == 30 && period == "AM") {
-    u8g2.clearBuffer();
+
     u8g2.setDrawColor(1);
 
     u8g2.drawBox(0, 0, 127, 63);
@@ -81,6 +82,7 @@ void Clock() {
     pixels.setPixelColor(0, pixels.Color(255, 255, 255));  // White
     pixels.show();
     u8g2.sendBuffer();
+    return;
   }
 }
 
@@ -104,6 +106,7 @@ void Menu() {
     u8g2.drawFrame(0, 0, 127, 63);
     menu = false;
 
+    updateLEDMode();
     drawWifiSymbol();  // Show Wi-Fi symbol if connected
     Clock();
     Batt();
@@ -115,14 +118,13 @@ void Menu() {
 
       // Sleep for 1 seconds
       Serial.println("Entering light sleep...");
-      esp_sleep_enable_timer_wakeup(1 * 100000);  // Wake up after 1s
-      esp_light_sleep_start();                    // Go into light sleep
+      esp_sleep_enable_timer_wakeup(1 * 1000000);  // Wake up after 1s
+      esp_light_sleep_start();  // Go into light sleep
 
       // Update the display if Asleep
       u8g2.setCursor(10, 10);
       u8g2.setFont(u8g2_font_5x7_tr);
       u8g2.drawStr(0, 10, " Power Save ");
-      //u8g2.sendBuffer();
     } else {
       setCpuFrequencyMhz(240);
 
@@ -130,11 +132,9 @@ void Menu() {
       u8g2.setCursor(10, 10);
       u8g2.setFont(u8g2_font_5x7_tr);
       u8g2.drawStr(0, 10, " Awake ");
-      // u8g2.sendBuffer();
     }
   }
-    u8g2.sendBuffer();
-
+  u8g2.sendBuffer();
 }
 
 #endif

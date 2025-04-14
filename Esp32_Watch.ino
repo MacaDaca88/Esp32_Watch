@@ -1,4 +1,6 @@
 #include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <Arduino.h>
@@ -9,11 +11,18 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 #include "ota.h"
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 43200, 14400000);
+NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 43200, 43200000);
+unsigned long lastNtpEpoch = 0;
 
 unsigned long Time = 0;
 unsigned long oldTime = 0;
 
+const String apiKey = "4a68ce6a2308c37c5359f808959da76b";  // Get this from OpenWeatherMap
+const String city = "Christchurch";  // Set your city name
+const String url = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + apiKey + "&units=metric";  // Request URL
+String weatherDescription;
+float temperature;
+float humidity;
 #include "Led.h"
 #include "Batt.h"
 
@@ -56,6 +65,7 @@ void setup() {
   u8g2.sendBuffer();
   delay(2000);
 
+  u8g2.clearBuffer();
   u8g2.setCursor(10, 10);
   u8g2.setFont(u8g2_font_ncenB08_tr);
   u8g2.drawStr(0, 10, " BOOTING. ");
@@ -76,10 +86,14 @@ void loop() {
   Time = millis();
 
   ArduinoOTA.handle();  // OTA handling always active
-  timeClient.update();
+  static unsigned long lastSync = 0;
+  if (WiFi.status() == WL_CONNECTED && millis() - lastSync > 60000) {
+    if (timeClient.update()) {
+      lastSync = millis();                       // Store for tracking sync frequency
+      lastNtpEpoch = timeClient.getEpochTime();  // Store actual time of last successful NTP
+    }
+  }
 
   button();
   Menu();
-
-
 }

@@ -15,7 +15,6 @@ float readBatteryVoltage() {
 void Batt() {
   float batteryVoltage = readBatteryVoltage();  // Get the battery voltage
 
-
   // Display the battery voltage on the screen
   u8g2.setFont(u8g2_font_5x7_tr);
   u8g2.setCursor(68, 59);
@@ -28,7 +27,9 @@ void Batt() {
     battCharged = false;
   }
 
-  if (batteryVoltage <= 3.65) {
-    ledFlashColorRed = true;
+  if (batteryVoltage <= 3.60) {
+    battFlat = true;
+  } else {
+    battFlat = false;
   }
 }
