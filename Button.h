@@ -8,8 +8,10 @@ int button1State = 0;
 int button2State = 0;
 int button3State = 0;
 
-static unsigned long button1PressStartTime = 0;  // Track button1 press time
-static bool button1Held = false;
+bool button1Pressed = false;
+unsigned long pressStartTime = 0;
+const unsigned long shortHold = 1500;  // 1.5 seconds
+const unsigned long longHold = 5000;   // 5 seconds
 
 // Variables for menu navigation
 int menuState = 0;
@@ -86,7 +88,7 @@ void handleMenuSelection() {
         }
         u8g2.sendBuffer();
 
-        delay(2000);  // Allow the user time to see the output
+        delay(3000);  // Allow the user time to see the output
         break;
       }
     case 2:  // uptime display
@@ -111,7 +113,7 @@ void handleMenuSelection() {
         u8g2.print(seconds);
         u8g2.sendBuffer();
 
-        delay(2000);  // Allow the user time to see the output
+        delay(3000);  // Allow the user time to see the output
       }
 
     case 3:  // Display Last Time updated
@@ -134,7 +136,7 @@ void handleMenuSelection() {
         u8g2.print(buffer);
 
         u8g2.sendBuffer();
-        delay(2000);  // Allow the user time to see the output
+        delay(3000);  // Allow the user time to see the output
 
         break;
       }
@@ -162,9 +164,12 @@ void handleMenuSelection() {
             u8g2.setDrawColor(0);
             u8g2.drawBox(0, 0, 127, 63);
             u8g2.setDrawColor(1);
-            u8g2.setFont(u8g2_font_4x6_mf);
-            u8g2.setCursor(5, 10);
-            u8g2.print("Weather: " + weatherDescription);
+            u8g2.setFont(u8g2_font_6x10_mf);
+            u8g2.setCursor(5, 5);
+            u8g2.print("Weather: ");
+            u8g2.setCursor(5, 15);
+            u8g2.print(weatherDescription);
+            
             u8g2.setFont(u8g2_font_timR10_tf);
 
             u8g2.setCursor(10, 30);
@@ -182,7 +187,7 @@ void handleMenuSelection() {
             u8g2.sendBuffer();
           }
           http.end();   // Close the connection
-          delay(2000);  // Allow the user time to see the output
+          delay(5000);  // Allow the user time to see the output
 
         } else {
           u8g2.clearBuffer();
@@ -202,23 +207,38 @@ void handleMenuSelection() {
 }
 
 void button() {
+  unsigned long currentTime = millis();  // Get the current time
+
   // Read current button states
   button1 = digitalRead(BUTTON1);
   button2 = digitalRead(BUTTON2);
   button3 = digitalRead(BUTTON3);
 
-  if (!menu) {             // Normal screen logic
-    if (button1 == LOW) {  // Button 1 action
-      if (Time - oldTime >= 3000) {
-        ledMode = 0;
+  if (!menu) {  // Normal screen logic
+    if (button1 == LOW) {
+      if (!button1Pressed) {
+        button1Pressed = true;
+        pressStartTime = currentTime;
       }
-      oldTime = Time;
+    } else {
+      if (button1Pressed) {
+        unsigned long pressDuration = currentTime - pressStartTime;
+
+        if (pressDuration >= longHold) {
+          ledMode = 0;
+        } else if (pressDuration >= shortHold) {
+          ledMode = 4;
+        }
+        button1Pressed = false;
+      }
     }
+
+
     if (button1 != button1State) {  // Toggle LED mode
       button1State = button1;
       if (button1 == HIGH) {          // Detect rising edge
-        ledMode = (ledMode + 1) % 5;  // Cycle LED modes (0 to 4)
-        delay(800);                   // Debounce delay
+        ledMode = (ledMode + 1) % 6;  // Cycle LED modes (0 to 4)
+        delay(10);                   // Debounce delay
       }
     }
     if (button2 != button2State) {  // Toggle menu

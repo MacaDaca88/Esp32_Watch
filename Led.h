@@ -56,7 +56,7 @@ void updateLEDMode() {
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
       u8g2.setCursor(70, 10);
-      u8g2.print("LED OFF");
+     // u8g2.print("LED OFF");
       break;
 
     case 1:  // Solid White LED
@@ -66,13 +66,13 @@ void updateLEDMode() {
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
       u8g2.setCursor(70, 10);
-      u8g2.print("White");
+     // u8g2.print("White");
       break;
 
     case 2:  // Strobe White LED
 
       // Strobe flashing mode
-      if (currentTime - lastFlashTime >= 50) {  //blink 20x per second
+      if (currentTime - lastFlashTime >= 25) {  //blink 50x per second
         // Toggle the LED state
         static bool flashState = false;  // Tracks the ON/OFF state of the flashing
         flashState = !flashState;
@@ -89,7 +89,7 @@ void updateLEDMode() {
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
       u8g2.setCursor(70, 10);
-      u8g2.print("White Strobe");
+      //u8g2.print("White Strobe");
       break;
 
     case 3:  // Solid Green Led
@@ -100,7 +100,7 @@ void updateLEDMode() {
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
       u8g2.setCursor(70, 10);
-      u8g2.print("Green");
+     // u8g2.print("Green");
       break;
 
     case 4:  // Strobe Green LED
@@ -123,8 +123,28 @@ void updateLEDMode() {
       u8g2.setDrawColor(1);
       u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
       u8g2.setCursor(70, 10);
-      u8g2.print("Green Strobe");
+    //  u8g2.print("Green Strobe");
       break;
+    case 5:
+      // 50 flashing mode
+      if (currentTime - lastFlashTime >= 100) {  //blink 5x per second
+        // Toggle the LED state
+        static bool flashState = false;  // Tracks the ON/OFF state of the flashing
+        flashState = !flashState;
+
+        if (flashState) {
+          pixels.setPixelColor(0, pixels.Color(255, 0, 0));  // Green
+        } else {
+          pixels.setPixelColor(0, pixels.Color(0, 0, 255));  // OFF
+        }
+        pixels.show();
+
+        lastFlashTime = currentTime;  // Update the last flash time
+      }
+      u8g2.setDrawColor(1);
+      u8g2.setFont(u8g2_font_tom_thumb_4x6_mf);
+      u8g2.setCursor(70, 10);
+     // u8g2.print("50 Strobe");
   }
 }
 

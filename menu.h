@@ -36,6 +36,23 @@ void Clock() {
     case 5: dayOfWeek = "Friday"; break;
     case 6: dayOfWeek = "Saturday"; break;
   }
+  time_t rawTime = timeClient.getEpochTime();
+  struct tm* timeInfo = localtime(&rawTime);
+
+  int date = timeInfo->tm_mday;
+  int month = timeInfo->tm_mon;  // 0 = Jan, 3 = April, etc.
+
+  String suffix = "th";
+  if (date % 10 == 1 && date != 11) suffix = "st";
+  else if (date % 10 == 2 && date != 12) suffix = "nd";
+  else if (date % 10 == 3 && date != 13) suffix = "rd";
+
+  const char* months[] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  };
+
+  String fullDate = String(date) + suffix + " " + months[month];
 
   u8g2.setFont(u8g2_font_osr18_tf);
 
@@ -44,12 +61,15 @@ void Clock() {
 
   u8g2.setFont(u8g2_font_6x10_mf);
   u8g2.print(period);
-  u8g2.setCursor(10, 59);
-  u8g2.setFont(u8g2_font_timR10_tf);
+  u8g2.setCursor(5, 59);
+  u8g2.setFont(u8g2_font_6x10_mf);
   u8g2.print(dayOfWeek);
+  u8g2.setFont(u8g2_font_6x10_mf);
+  u8g2.setCursor(65, 59);
+  u8g2.print(fullDate);
   u8g2.setFont(u8g2_font_timR10_tf);
-  u8g2.setCursor(30, 45);
-  u8g2.print("Fake Rolex ");
+  u8g2.setCursor(50, 45);
+  u8g2.print("Folex ");
 
 
   if (hours == 4 && minutes == 20) {
@@ -119,21 +139,40 @@ void Menu() {
       // Sleep for 1 seconds
       Serial.println("Entering light sleep...");
       esp_sleep_enable_timer_wakeup(1 * 1000000);  // Wake up after 1s
-      esp_light_sleep_start();  // Go into light sleep
-
+      esp_light_sleep_start();                     // Go into light sleep
       // Update the display if Asleep
-      u8g2.setCursor(10, 10);
-      u8g2.setFont(u8g2_font_5x7_tr);
-      u8g2.drawStr(0, 10, " Power Save ");
+      //  u8g2.setCursor(10, 10);
+      //  u8g2.setFont(u8g2_font_5x7_tr);
+      //  u8g2.drawStr(0, 10, " Power Save ");
     } else {
       setCpuFrequencyMhz(240);
 
       // Update the display if Awake
-      u8g2.setCursor(10, 10);
-      u8g2.setFont(u8g2_font_5x7_tr);
-      u8g2.drawStr(0, 10, " Awake ");
+      // u8g2.setCursor(10, 10);
+      // u8g2.setFont(u8g2_font_5x7_tr);
+      // u8g2.drawStr(0, 10, " Awake ");
     }
   }
+/*  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(url);  // Connect to the weather API
+
+    int httpCode = http.GET();  // Send GET request
+
+    if (httpCode == HTTP_CODE_OK) {       // If HTTP request is successful
+      String payload = http.getString();  // Get the response as a string
+
+      // Parse JSON data
+      DynamicJsonDocument doc(1024);
+      deserializeJson(doc, payload);
+
+      temperature = doc["main"]["temp"].as<float>();  // Temperature
+
+      u8g2.setFont(u8g2_font_helvR08_tr);
+      u8g2.setCursor(10, 45);
+      u8g2.print(String(temperature) + " C");
+    }
+  }*/
   u8g2.sendBuffer();
 }
 

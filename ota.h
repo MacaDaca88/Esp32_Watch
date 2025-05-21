@@ -8,18 +8,33 @@
 const char* ssid = "Tip-jar";
 const char* password = "PASSWORD1234LOL";
 
+const char* ssid2 = "NotYours";
+const char* password2 = "PayMe4It";
+
 bool otaInProgress = false;
 bool wifiState = false;
 
 void OTAinit() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  /* while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
+
+  // Wait for a few seconds to connect
+  unsigned long startAttemptTime = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
+    delay(100);
   }
-  */
+
+  if (WiFi.status() == WL_CONNECTED) {
+  } else {
+    WiFi.disconnect();
+    WiFi.begin(ssid2, password2);
+
+    // Wait again for backup connection
+    startAttemptTime = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
+      delay(100);
+    }
+  }
   // Port defaults to 3232
   // ArduinoOTA.setPort(3232);
 
@@ -41,7 +56,6 @@ void OTAinit() {
       else  // U_SPIFFS
         type = "filesystem";
       otaInProgress = true;  // Set the flag to true
-
     })
     .onEnd([]() {
       otaInProgress = false;  // Reset the flag
@@ -70,7 +84,6 @@ void OTAinit() {
     });
 
   ArduinoOTA.begin();
-
 }
 void drawWifiSymbol() {
   int x = 115;     // Center x-coordinate of Wi-Fi symbol

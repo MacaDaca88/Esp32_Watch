@@ -17,8 +17,8 @@ void Batt() {
 
   // Display the battery voltage on the screen
   u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.setCursor(68, 59);
-  u8g2.print("B+ ");
+  u8g2.setCursor(10, 10);
+  //u8g2.print("B+ ");
   u8g2.print(batteryVoltage, 2);  // Display voltage with two decimal points
   u8g2.print("V");
   if (batteryVoltage >= 4.20) {
@@ -27,7 +27,7 @@ void Batt() {
     battCharged = false;
   }
 
-  if (batteryVoltage <= 3.60) {
+  if (batteryVoltage <= 3.50) {
     battFlat = true;
   } else {
     battFlat = false;
