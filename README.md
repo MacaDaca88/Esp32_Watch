@@ -1,5 +1,7 @@
 # Esp32_Watch
  
+u8g2_font_luRS08_tf
+
 ///////////////////////////////////Small Fonts///////////////////////////////////
 u8g2_font_tom_thumb_4x6_mf - Ultra-small 4x6 font.
 u8g2_font_micro_mf - Very tiny, readable micro font.
