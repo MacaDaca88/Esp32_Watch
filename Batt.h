@@ -24,8 +24,8 @@ void Batt() {
 
   // Draw battery outline
   int x = 5, y = 50, w = 20, h = 10;
-  u8g2.drawFrame(x, y, w, h);          // Outer battery body
-  u8g2.drawBox(x + w, y + 3, 2, 4);    // Battery tip
+  u8g2.drawFrame(x, y, w, h);        // Outer battery body
+  u8g2.drawBox(x + w, y + 3, 2, 4);  // Battery tip
 
   // Fill battery based on percentage
   int fillWidth = map(percentage, 0, 100, 0, w - 2);
@@ -35,4 +35,13 @@ void Batt() {
   u8g2.setFont(u8g2_font_6x10_tf);  // Clean and readable font
   u8g2.setCursor(28, 59);
   u8g2.printf(" %d%%", percentage);
+  if (percentage <= 50) {
+    setCpuFrequencyMhz(160);
+  }
+  if (percentage <= 40) {
+    setCpuFrequencyMhz(80);
+  }
+  if (percentage <= 30) {
+    wifiState = false;
+  }
 }

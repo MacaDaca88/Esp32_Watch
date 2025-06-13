@@ -24,7 +24,7 @@ String weatherDescription;
 float temperature;
 float humidity;
 int menu = 0;
-
+#include <EEPROM.h>
 #include "QR.h"
 #include "Led.h"
 #include "Batt.h"
@@ -77,7 +77,7 @@ void setup() {
   pinMode(BUTTON3, INPUT_PULLUP);
 
   pinMode(LED, OUTPUT);
-
+  EEPROM.begin(64);
   u8g2.begin();
   u8g2.clearBuffer();
 
