@@ -56,19 +56,19 @@ void Clock() {
 
   u8g2.setFont(u8g2_font_osr18_tf);
 
-  u8g2.setCursor(5, 30);
+  u8g2.setCursor(3, 23);
   u8g2.print(timeBuffer);
 
   u8g2.setFont(u8g2_font_6x10_mf);
   u8g2.print(period);
-  u8g2.setCursor(5, 59);
-  u8g2.setFont(u8g2_font_6x10_mf);
+  u8g2.setCursor(5, 40);
+  u8g2.setFont(u8g2_font_timR10_tf);
   u8g2.print(dayOfWeek);
-  u8g2.setFont(u8g2_font_6x10_mf);
-  u8g2.setCursor(65, 59);
+  u8g2.setFont(u8g2_font_timR10_tf);
+  u8g2.setCursor(65, 40);
   u8g2.print(fullDate);
   u8g2.setFont(u8g2_font_timR10_tf);
-  u8g2.setCursor(50, 45);
+  u8g2.setCursor(55, 59);
   u8g2.print("Folex ");
 
 
@@ -125,13 +125,15 @@ void Menu() {
     u8g2.setDrawColor(1);
     u8g2.drawFrame(0, 0, 127, 63);
     menu = false;
-
-    updateLEDMode();
-    drawWifiSymbol();  // Show Wi-Fi symbol if connected
-    Clock();
-    Batt();
-    light();
-
+    if (snakePlay) {
+      snakeGame();
+      return;  // prevent other logic from running
+    } else {
+      updateLEDMode();
+      Clock();
+      Batt();
+      light();
+    }
     // Enter light sleep for short periods if no Wifi
     if (!wifiState) {
       setCpuFrequencyMhz(80);
@@ -146,6 +148,7 @@ void Menu() {
       //  u8g2.drawStr(0, 10, " Power Save ");
     } else {
       setCpuFrequencyMhz(240);
+      drawWifiSymbol(u8g2);
 
       // Update the display if Awake
       // u8g2.setCursor(10, 10);
@@ -153,26 +156,6 @@ void Menu() {
       // u8g2.drawStr(0, 10, " Awake ");
     }
   }
-/*  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    http.begin(url);  // Connect to the weather API
-
-    int httpCode = http.GET();  // Send GET request
-
-    if (httpCode == HTTP_CODE_OK) {       // If HTTP request is successful
-      String payload = http.getString();  // Get the response as a string
-
-      // Parse JSON data
-      DynamicJsonDocument doc(1024);
-      deserializeJson(doc, payload);
-
-      temperature = doc["main"]["temp"].as<float>();  // Temperature
-
-      u8g2.setFont(u8g2_font_helvR08_tr);
-      u8g2.setCursor(10, 45);
-      u8g2.print(String(temperature) + " C");
-    }
-  }*/
   u8g2.sendBuffer();
 }
 

@@ -60,19 +60,42 @@ void OTAinit() {
     .onEnd([]() {
       otaInProgress = false;  // Reset the flag
     })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      u8g2.clearBuffer();
-      u8g2.setFont(u8g2_font_ncenB08_tr);
-      u8g2.setDrawColor(1);
-      u8g2.setCursor(20, 20);
-      u8g2.printf("Progress: %u%%\r", (progress / (total / 100)));
-      int progressPX = progress / (total / 100);
-      u8g2.drawBox(15, 50, progressPX, 64);
-      u8g2.setCursor(20, 40);
-      u8g2.print("Be Patient Dick");
+.onProgress([](unsigned int progress, unsigned int total) {
+  u8g2.clearBuffer();
 
-      u8g2.sendBuffer();
-    })
+  // Fonts
+  u8g2.setFont(u8g2_font_6x13_tf); // clean and readable
+  u8g2.setDrawColor(1);
+
+  // Title Text
+  u8g2.setCursor(20, 14);
+  u8g2.print("Firmware Update");
+
+  // Progress percentage
+  int percent = (progress * 100) / total;
+  char buf[16];
+  sprintf(buf, "Progress: %3d%%", percent);
+  u8g2.setCursor(25, 30);
+  u8g2.print(buf);
+
+  // Progress bar background
+  int barX = 10;
+  int barY = 35;
+  int barW = 110;
+  int barH = 15;
+  u8g2.drawFrame(barX, barY, barW, barH);
+
+  // Progress bar fill
+  int progressPX = (percent * (barW - 2)) / 100;
+  u8g2.drawBox(barX + 1, barY + 1, progressPX, barH - 2);
+
+  // Footer message
+  u8g2.setCursor(20, 60);
+  u8g2.print("Please wait...");
+
+  u8g2.sendBuffer();
+})
+
     .onError([](ota_error_t error) {
       u8g2.printf("Error[%u]: ", error);
 
@@ -85,24 +108,30 @@ void OTAinit() {
 
   ArduinoOTA.begin();
 }
-void drawWifiSymbol() {
-  int x = 115;     // Center x-coordinate of Wi-Fi symbol
-  int y = 59;      // Center y-coordinate of Wi-Fi symbol
-  int radius = 9;  // Radius of the largest arc
+void drawWifiSymbol(U8G2 &u8g2) {
+  int x = 115; // X position of the center
+  int y = 60;  // Y position of the base
+  int rssi = WiFi.RSSI();  // Get signal strength
+  int level = 0;
 
-  if (WiFi.status() == WL_CONNECTED) {
-    // Draw Wi-Fi symbol
-    u8g2.drawCircle(x, y, 3, U8G2_DRAW_UPPER_RIGHT);
-    u8g2.drawCircle(x, y, 6, U8G2_DRAW_UPPER_RIGHT);
-    u8g2.drawCircle(x, y, 9, U8G2_DRAW_UPPER_RIGHT);
-    // Draw the filled disc at the center
-    u8g2.drawDisc(x, y, 2, U8G2_DRAW_ALL);
-    // Display network RSSI value near the symbol
-    u8g2.setCursor(x - 8, y - 15);
-    u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.print(WiFi.RSSI());
-  }
+  // Determine signal level
+  if (rssi > -50)      level = 3; // Excellent
+  else if (rssi > -60) level = 2; // Good
+  else if (rssi > -70) level = 1; // Fair
+  else                 level = 0; // Weak
+
+  // Always draw center dot
+  u8g2.drawDisc(x, y, 1, U8G2_DRAW_ALL);
+
+  // Draw arcs based on signal level
+  if (level >= 1)
+    u8g2.drawCircle(x, y, 4, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
+  if (level >= 2)
+    u8g2.drawCircle(x, y, 7, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
+  if (level >= 3)
+    u8g2.drawCircle(x, y, 10, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
 }
+
 void handleWiFiState() {
   if (wifiState) {
     u8g2.setDrawColor(1);

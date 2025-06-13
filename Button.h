@@ -15,13 +15,16 @@ const unsigned long longHold = 5000;   // 5 seconds
 
 // Variables for menu navigation
 int menuState = 0;
-const char* menuItems[] = { "Ip Address", "Scan Wifi ", "Up-Time", "Clock Sync", "Weather" };
+const char* menuItems[] = { "Ip Address", "Scan Wifi ", "Up-Time", "Snake", "Weather", "QR: Maca3D" };
 const int menuLength = sizeof(menuItems) / sizeof(menuItems[0]);
+
 int currentSelection = 0;
-int menu = 0;
+
 
 void drawMenu() {
   u8g2.clearBuffer();
+  u8g2.setDrawColor(0);
+  u8g2.drawBox(0, 0, 127, 63);
   menu = true;
   // Draw each menu item
   for (int i = 0; i < menuLength; i++) {
@@ -68,6 +71,9 @@ void handleMenuSelection() {
     case 1:  // Scan Wi-Fi networks
       {
         u8g2.clearBuffer();
+        u8g2.setDrawColor(0);
+        u8g2.drawBox(0, 0, 127, 63);
+        u8g2.setDrawColor(1);
         u8g2.setCursor(0, 10);
         u8g2.print("Scanning Wi-Fi...");
         u8g2.sendBuffer();
@@ -111,17 +117,10 @@ void handleMenuSelection() {
         u8g2.print(minutes);
         u8g2.print(":");
         u8g2.print(seconds);
-        u8g2.sendBuffer();
-
-        delay(3000);  // Allow the user time to see the output
-      }
-
-    case 3:  // Display Last Time updated
-      {
-        u8g2.clearBuffer();
+        // Display Last Time updated
         u8g2.setDrawColor(1);
         u8g2.setFont(u8g2_font_timR10_tf);
-        u8g2.setCursor(5, 10);
+        u8g2.setCursor(5, 40);
 
         // Convert lastNtpEpoch to time struct
         struct tm* timeinfo;
@@ -136,8 +135,15 @@ void handleMenuSelection() {
         u8g2.print(buffer);
 
         u8g2.sendBuffer();
-        delay(3000);  // Allow the user time to see the output
 
+        delay(3000);  // Allow the user time to see the output
+        break;
+      }
+
+    case 3:
+      {
+        snakeGame();
+        snakePlay = true;
         break;
       }
     case 4:  // Display Weather
@@ -164,12 +170,10 @@ void handleMenuSelection() {
             u8g2.setDrawColor(0);
             u8g2.drawBox(0, 0, 127, 63);
             u8g2.setDrawColor(1);
-            u8g2.setFont(u8g2_font_6x10_mf);
-            u8g2.setCursor(5, 5);
-            u8g2.print("Weather: ");
-            u8g2.setCursor(5, 15);
+            u8g2.setFont(u8g2_font_timR10_tf);
+            u8g2.setCursor(5, 12);
             u8g2.print(weatherDescription);
-            
+
             u8g2.setFont(u8g2_font_timR10_tf);
 
             u8g2.setCursor(10, 30);
@@ -180,6 +184,9 @@ void handleMenuSelection() {
 
             u8g2.sendBuffer();
           } else {
+            u8g2.setDrawColor(0);
+            u8g2.drawBox(0, 0, 127, 63);
+            u8g2.setDrawColor(1);
             u8g2.setCursor(10, 10);
             u8g2.print("Failed to fetch");
             u8g2.setCursor(10, 30);
@@ -188,7 +195,6 @@ void handleMenuSelection() {
           }
           http.end();   // Close the connection
           delay(5000);  // Allow the user time to see the output
-
         } else {
           u8g2.clearBuffer();
           u8g2.setDrawColor(1);
@@ -200,7 +206,10 @@ void handleMenuSelection() {
         }
         break;
       }
-
+    case 5:
+      {
+        qr();
+      }
     default:
       break;
   }
@@ -213,6 +222,8 @@ void button() {
   button1 = digitalRead(BUTTON1);
   button2 = digitalRead(BUTTON2);
   button3 = digitalRead(BUTTON3);
+
+
 
   if (!menu) {  // Normal screen logic
     if (button1 == LOW) {
@@ -238,7 +249,7 @@ void button() {
       button1State = button1;
       if (button1 == HIGH) {          // Detect rising edge
         ledMode = (ledMode + 1) % 6;  // Cycle LED modes (0 to 4)
-        delay(10);                   // Debounce delay
+        delay(10);                    // Debounce delay
       }
     }
     if (button2 != button2State) {  // Toggle menu

@@ -15,21 +15,24 @@ float readBatteryVoltage() {
 void Batt() {
   float batteryVoltage = readBatteryVoltage();  // Get the battery voltage
 
-  // Display the battery voltage on the screen
-  u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.setCursor(10, 10);
-  //u8g2.print("B+ ");
-  u8g2.print(batteryVoltage, 2);  // Display voltage with two decimal points
-  u8g2.print("V");
-  if (batteryVoltage >= 4.20) {
-    battCharged = true;
-  } else {
-    battCharged = false;
-  }
+  // Calculate percentage (assuming 3.3V = 0%, 4.2V = 100%)
+  int percentage = constrain(map(batteryVoltage * 100, 330, 420, 0, 100), 0, 100);
 
-  if (batteryVoltage <= 3.50) {
-    battFlat = true;
-  } else {
-    battFlat = false;
-  }
+  // Update status flags
+  battCharged = batteryVoltage >= 4.20;
+  battFlat = batteryVoltage <= 3.50;
+
+  // Draw battery outline
+  int x = 5, y = 50, w = 20, h = 10;
+  u8g2.drawFrame(x, y, w, h);          // Outer battery body
+  u8g2.drawBox(x + w, y + 3, 2, 4);    // Battery tip
+
+  // Fill battery based on percentage
+  int fillWidth = map(percentage, 0, 100, 0, w - 2);
+  u8g2.drawBox(x + 1, y + 1, fillWidth, h - 2);
+
+  // Display voltage and percentage
+  u8g2.setFont(u8g2_font_6x10_tf);  // Clean and readable font
+  u8g2.setCursor(28, 59);
+  u8g2.printf(" %d%%", percentage);
 }
