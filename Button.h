@@ -1,4 +1,6 @@
-
+// GamesMenu.h
+#ifndef GAMES_MENU_H
+#define GAMES_MENU_H
 
 int button1 = 1;
 int button2 = 1;
@@ -10,27 +12,36 @@ int button3State = 0;
 
 bool button1Pressed = false;
 unsigned long pressStartTime = 0;
-const unsigned long shortHold = 1500;  // 1.5 seconds
-const unsigned long longHold = 5000;   // 5 seconds
+const unsigned long shortHold = 1500;
+const unsigned long longHold = 5000;
 
-// Variables for menu navigation
 int menuState = 0;
-const char* menuItems[] = { "Ip Address", "Scan Wifi ", "Up-Time", "Snake", "Weather", "QR: Maca3D" };
+const char* menuItems[] = { "Ip Address", "Scan Wifi ", "Up-Time", "Games", "Weather", "QR: Maca3D" };
 const int menuLength = sizeof(menuItems) / sizeof(menuItems[0]);
-
 int currentSelection = 0;
 
+const char* gameItems[] = { "Snake", "Pacman" };
+const int gameLength = sizeof(gameItems) / sizeof(gameItems[0]);
+int gameSelection = 0;
 
+void pacmanGame() {
+  u8g2.clearBuffer();
+  u8g2.setDrawColor(1);
+  u8g2.setFont(u8g2_font_ncenB08_tr);
+  u8g2.setCursor(10, 30);
+  u8g2.print("Pacman Coming Soon!");
+  u8g2.sendBuffer();
+  delay(2000);
+}
 void drawMenu() {
   u8g2.clearBuffer();
   u8g2.setDrawColor(0);
   u8g2.drawBox(0, 0, 127, 63);
   menu = true;
-  // Draw each menu item
   for (int i = 0; i < menuLength; i++) {
     if (i == currentSelection) {
       u8g2.setDrawColor(1);
-      u8g2.drawBox(0, i * 10, 128, 10);  // Highlight selected item
+      u8g2.drawBox(0, i * 10, 128, 10);
       u8g2.setDrawColor(0);
     } else {
       u8g2.setDrawColor(1);
@@ -41,191 +52,191 @@ void drawMenu() {
   }
   u8g2.sendBuffer();
 }
-void handleMenuSelection() {
+
+void drawGameMenu() {
   u8g2.clearBuffer();
+  u8g2.setDrawColor(0);
+  u8g2.drawBox(0, 0, 127, 63);
+  u8g2.setDrawColor(1);
   u8g2.setFont(u8g2_font_ncenB08_tr);
-  u8g2.setCursor(0, 30);
-  u8g2.print("Selected:");
-  u8g2.setCursor(0, 50);
-  u8g2.print(menuItems[currentSelection]);
+  for (int i = 0; i < gameLength; i++) {
+    if (i == gameSelection) {
+      u8g2.setDrawColor(1);
+      u8g2.drawBox(0, i * 10, 128, 10);
+      u8g2.setDrawColor(0);
+    } else {
+      u8g2.setDrawColor(1);
+    }
+    u8g2.setCursor(2, (i + 1) * 10 - 2);
+    u8g2.print(gameItems[i]);
+  }
   u8g2.sendBuffer();
+}
 
-  delay(500);  // Show selected item for 1 second
+void handleGameSelection() {
+  switch (gameSelection) {
+    case 0: snakeGame(); break;
+    case 1: pacmanGame(); break;
+  }
+}
+
+void handleMenuSelection() {
   switch (currentSelection) {
-    case 0:  // Show IP Address
-      {
-        u8g2.clearBuffer();
-        u8g2.setDrawColor(0);
-        u8g2.drawBox(0, 0, 128, 64);
-        u8g2.setDrawColor(1);
-        u8g2.setCursor(10, 10);
-        u8g2.print("IP Address:");
-        u8g2.setCursor(10, 40);
-        u8g2.print(WiFi.localIP());
-        u8g2.sendBuffer();
-
-        delay(1000);
-        break;
-      }
-
-    case 1:  // Scan Wi-Fi networks
-      {
-        u8g2.clearBuffer();
-        u8g2.setDrawColor(0);
-        u8g2.drawBox(0, 0, 127, 63);
-        u8g2.setDrawColor(1);
+    case 0: { // IP
+      u8g2.clearBuffer();
+      u8g2.setCursor(10, 10);
+      u8g2.print("IP Address:");
+      u8g2.setCursor(10, 40);
+      u8g2.print(WiFi.localIP());
+      u8g2.sendBuffer();
+      delay(1000);
+      break;
+    }
+    case 1: { // Scan Wi-Fi
+      u8g2.clearBuffer();
+      u8g2.setCursor(0, 10);
+      u8g2.print("Scanning Wi-Fi...");
+      u8g2.sendBuffer();
+      int n = WiFi.scanNetworks();
+      u8g2.clearBuffer();
+      if (n == 0) {
         u8g2.setCursor(0, 10);
-        u8g2.print("Scanning Wi-Fi...");
-        u8g2.sendBuffer();
-
-        int n = WiFi.scanNetworks();  // Declare inside a block
-        u8g2.clearBuffer();
-
-        if (n == 0) {
-          u8g2.setCursor(0, 10);
-          u8g2.print("No networks found");
-        } else {
-          for (int i = 0; i < n && i < 5; ++i) {  // Limit to first 5 networks
-            u8g2.setCursor(0, (i + 1) * 10);
-            String networkInfo = String(i + 1) + ": " + WiFi.SSID(i) + " (" + WiFi.RSSI(i) + ")";
-            u8g2.print(networkInfo);
-            yield();  // Prevent watchdog reset
-          }
+        u8g2.print("No networks found");
+      } else {
+        for (int i = 0; i < n && i < 5; ++i) {
+          u8g2.setCursor(0, (i + 1) * 10);
+          u8g2.print(String(i + 1) + ": " + WiFi.SSID(i) + " (" + WiFi.RSSI(i) + ")");
+          yield();
         }
-        u8g2.sendBuffer();
-
-        delay(3000);  // Allow the user time to see the output
-        break;
       }
-    case 2:  // uptime display
-      {
-        u8g2.clearBuffer();
+      u8g2.sendBuffer();
+      delay(3000);
+      break;
+    }
+    case 2: { // Uptime
+      u8g2.clearBuffer();
+      unsigned long s = Time / 1000;
+      unsigned long m = s / 60;
+      unsigned long h = m / 60;
+      s = s % 60;
+      m = m % 60;
+      u8g2.setCursor(10, 20);
+      u8g2.print("Uptime = " + String(h) + ":" + String(m) + ":" + String(s));
+      struct tm* tinfo;
+      tinfo = localtime((time_t*)&lastNtpEpoch);
+      char buf[20];
+      strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tinfo);
+      u8g2.setCursor(5, 40);
+      u8g2.print(buf);
+      u8g2.sendBuffer();
+      delay(3000);
+      break;
+    }
+    case 3: { // Games
+  bool inGameMenu = true;
+  drawGameMenu();
 
-        unsigned long seconds = Time / 1000;   // Convert milliseconds to seconds
-        unsigned long minutes = seconds / 60;  // Convert seconds to minutes
-        unsigned long hours = minutes / 60;    // Convert minutes to hours
+  bool button1Prev = HIGH;
+  bool button2Prev = HIGH;
+  bool button3Prev = HIGH;
 
-        seconds = seconds % 60;  // Remaining seconds after minutes
-        minutes = minutes % 60;  // Remaining minutes after hours
-        u8g2.setDrawColor(1);
-        u8g2.setFont(u8g2_font_timR10_tf);
-        u8g2.setCursor(10, 20);
+  while (inGameMenu) {
+    button1 = digitalRead(BUTTON1);
+    button2 = digitalRead(BUTTON2);
+    button3 = digitalRead(BUTTON3);
 
-        u8g2.print("Uptime = ");
-        u8g2.print(hours);
-        u8g2.print(":");
-        u8g2.print(minutes);
-        u8g2.print(":");
-        u8g2.print(seconds);
-        // Display Last Time updated
-        u8g2.setDrawColor(1);
-        u8g2.setFont(u8g2_font_timR10_tf);
-        u8g2.setCursor(5, 40);
+    if (button1 == LOW && button1Prev == HIGH) {
+      gameSelection--;
+      if (gameSelection < 0) gameSelection = gameLength - 1;
+      drawGameMenu();
+      delay(150);
+    }
 
-        // Convert lastNtpEpoch to time struct
-        struct tm* timeinfo;
-        time_t rawtime = lastNtpEpoch;   // Your last sync time
-        timeinfo = localtime(&rawtime);  // Convert to time structure
+    if (button3 == LOW && button3Prev == HIGH) {
+      gameSelection++;
+      if (gameSelection >= gameLength) gameSelection = 0;
+      drawGameMenu();
+      delay(150);
+    }
 
-        // Create buffer for formatted date and time
-        char buffer[20];                                                  // Buffer to hold the formatted date and time string
-        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);  // Format as YYYY-MM-DD HH:MM:SS
-
-        // Display the formatted date and time
-        u8g2.print(buffer);
-
-        u8g2.sendBuffer();
-
-        delay(3000);  // Allow the user time to see the output
-        break;
+    if (button2 == LOW && button2Prev == HIGH) {
+      unsigned long pressStart = millis();
+      while (digitalRead(BUTTON2) == LOW) {
+        if (millis() - pressStart > 3000) {
+          // Long press exits
+          inGameMenu = false;
+          drawMenu();
+          delay(200);
+          break;
+        }
       }
-
-    case 3:
-      {
-        snakeGame();
-        snakePlay = true;
-        break;
+      if (inGameMenu) {
+        // Short press selects game
+        handleGameSelection();
+        inGameMenu = false;
+        drawMenu();
+        delay(200);
       }
-    case 4:  // Display Weather
-      {
-        if (WiFi.status() == WL_CONNECTED) {
-          HTTPClient http;
-          http.begin(url);  // Connect to the weather API
+    }
 
-          int httpCode = http.GET();  // Send GET request
+    button1Prev = button1;
+    button2Prev = button2;
+    button3Prev = button3;
+  }
+  break;
+}
 
-          if (httpCode == HTTP_CODE_OK) {       // If HTTP request is successful
-            String payload = http.getString();  // Get the response as a string
-
-            // Parse JSON data
-            DynamicJsonDocument doc(1024);
-            deserializeJson(doc, payload);
-
-            weatherDescription = doc["weather"][0]["description"].as<String>();  // Weather description
-            temperature = doc["main"]["temp"].as<float>();                       // Temperature
-            humidity = doc["main"]["humidity"].as<float>();                      // Humidity
-
-            // Display the weather data
-            u8g2.clearBuffer();
-            u8g2.setDrawColor(0);
-            u8g2.drawBox(0, 0, 127, 63);
-            u8g2.setDrawColor(1);
-            u8g2.setFont(u8g2_font_timR10_tf);
-            u8g2.setCursor(5, 12);
-            u8g2.print(weatherDescription);
-
-            u8g2.setFont(u8g2_font_timR10_tf);
-
-            u8g2.setCursor(10, 30);
-            u8g2.print("Temp: " + String(temperature) + " C");
-
-            u8g2.setCursor(10, 50);
-            u8g2.print("Humidity: " + String(humidity) + " %");
-
-            u8g2.sendBuffer();
-          } else {
-            u8g2.setDrawColor(0);
-            u8g2.drawBox(0, 0, 127, 63);
-            u8g2.setDrawColor(1);
-            u8g2.setCursor(10, 10);
-            u8g2.print("Failed to fetch");
-            u8g2.setCursor(10, 30);
-            u8g2.print("weather data.");
-            u8g2.sendBuffer();
-          }
-          http.end();   // Close the connection
-          delay(5000);  // Allow the user time to see the output
-        } else {
+    case 4: { // Weather
+      if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        http.begin(url);
+        int httpCode = http.GET();
+        if (httpCode == HTTP_CODE_OK) {
+          String payload = http.getString();
+          DynamicJsonDocument doc(1024);
+          deserializeJson(doc, payload);
+          weatherDescription = doc["weather"][0]["description"].as<String>();
+          temperature = doc["main"]["temp"].as<float>();
+          humidity = doc["main"]["humidity"].as<float>();
           u8g2.clearBuffer();
-          u8g2.setDrawColor(1);
-          u8g2.setFont(u8g2_font_timR10_tf);
+          u8g2.setCursor(5, 12);
+          u8g2.print(weatherDescription);
+          u8g2.setCursor(10, 30);
+          u8g2.print("Temp: " + String(temperature) + " C");
+          u8g2.setCursor(10, 50);
+          u8g2.print("Humidity: " + String(humidity) + " %");
+        } else {
           u8g2.setCursor(10, 10);
-          u8g2.print("No Wi-Fi connection");
-          u8g2.sendBuffer();
-          delay(2000);  // Allow the user time to see the output
+          u8g2.print("Failed to fetch");
+          u8g2.setCursor(10, 30);
+          u8g2.print("weather data.");
         }
-        break;
+        http.end();
+        u8g2.sendBuffer();
+        delay(3000);
+      } else {
+        u8g2.clearBuffer();
+        u8g2.setCursor(10, 10);
+        u8g2.print("No Wi-Fi connection");
+        u8g2.sendBuffer();
+        delay(2000);
       }
+      break;
+    }
     case 5:
-      {
-        qr();
-      }
-    default:
+      qr();
       break;
   }
 }
 
-void button() {
-  unsigned long currentTime = millis();  // Get the current time
 
-  // Read current button states
+void button() {
+  unsigned long currentTime = millis();
   button1 = digitalRead(BUTTON1);
   button2 = digitalRead(BUTTON2);
   button3 = digitalRead(BUTTON3);
 
-
-
-  if (!menu) {  // Normal screen logic
+  if (!menu) {
     if (button1 == LOW) {
       if (!button1Pressed) {
         button1Pressed = true;
@@ -234,74 +245,60 @@ void button() {
     } else {
       if (button1Pressed) {
         unsigned long pressDuration = currentTime - pressStartTime;
-
-        if (pressDuration >= longHold) {
-          ledMode = 0;
-        } else if (pressDuration >= shortHold) {
-          ledMode = 4;
-        }
+        if (pressDuration >= longHold) ledMode = 0;
+        else if (pressDuration >= shortHold) ledMode = 4;
         button1Pressed = false;
       }
     }
-
-
-    if (button1 != button1State) {  // Toggle LED mode
+    if (button1 != button1State) {
       button1State = button1;
-      if (button1 == HIGH) {          // Detect rising edge
-        ledMode = (ledMode + 1) % 6;  // Cycle LED modes (0 to 4)
-        delay(10);                    // Debounce delay
+      if (button1 == HIGH) {
+        ledMode = (ledMode + 1) % 6;
+        delay(10);
       }
     }
-    if (button2 != button2State) {  // Toggle menu
+    if (button2 != button2State) {
       button2State = button2;
-      if (button2 == HIGH) {   // Detect rising edge
-        menu = true;           // Activate menu
-        currentSelection = 0;  // Reset menu selection
-        drawMenu();            // Draw the menu
+      if (button2 == HIGH) {
+        menu = true;
+        currentSelection = 0;
+        drawMenu();
       }
     }
-    if (button3 != button3State) {  // Toggle Wi-Fi state
+    if (button3 != button3State) {
       button3State = button3;
-      if (button3 == HIGH) {     // Detect rising edge
-        wifiState = !wifiState;  // Toggle Wi-Fi state
+      if (button3 == HIGH) {
+        wifiState = !wifiState;
         handleWiFiState();
-
-        // Update Wi-Fi display
         u8g2.clearBuffer();
-        u8g2.setDrawColor(0);
-        u8g2.drawBox(0, 0, 127, 63);
-        u8g2.setDrawColor(1);
-        u8g2.setFont(u8g2_font_ncenB14_tf);
         u8g2.setCursor(20, 40);
         u8g2.print(wifiState ? "Wi-Fi ON" : "Wi-Fi OFF");
         u8g2.sendBuffer();
-
-        delay(2000);  // Optional delay for button press effect
+        delay(2000);
       }
     }
-    // updateLEDMode();
-
-  } else {                 // Menu active
-    if (button1 == LOW) {  // Navigate up in the menu
+  } else {
+    if (button1 == LOW) {
       currentSelection--;
       if (currentSelection < 0) currentSelection = menuLength - 1;
       drawMenu();
-      delay(200);  // Debounce delay
+      delay(200);
     }
-    if (button2 == LOW) {  // Select menu item
+    if (button2 == LOW) {
       handleMenuSelection();
-      delay(200);  // Debounce delay
+      delay(200);
     }
-    if (button3 == LOW) {  // Navigate down in the menu
+    if (button3 == LOW) {
       currentSelection++;
       if (currentSelection >= menuLength) currentSelection = 0;
       drawMenu();
-      delay(200);  // Debounce delay
+      delay(200);
     }
-    // Exit menu if a long press of button 2 is detected
     if (button2 == LOW && Time - oldTime >= 4000) {
-      menu = false;  // Exit menu
+      menu = false;
       oldTime = Time;
     }
   }
 }
+
+#endif

@@ -142,8 +142,7 @@ void handleWiFiState() {
     WiFi.begin(ssid, password);
     // Wait for a few seconds to connect
     unsigned long startAttemptTime = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
-      delay(100);
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 3000) {
     }
 
     if (WiFi.status() == WL_CONNECTED) {
@@ -153,8 +152,7 @@ void handleWiFiState() {
 
       // Wait again for backup connection
       startAttemptTime = millis();
-      while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 5000) {
-        delay(100);
+      while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 2000) {
       }
     }
   } else {
