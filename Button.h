@@ -31,7 +31,7 @@ void pacmanGame() {
   u8g2.setCursor(10, 30);
   u8g2.print("Pacman Coming Soon!");
   u8g2.sendBuffer();
-  delay(2000);
+  delay(5000);
 }
 void drawMenu() {
   u8g2.clearBuffer();

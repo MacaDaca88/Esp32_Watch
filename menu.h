@@ -139,7 +139,6 @@ void Menu() {
       setCpuFrequencyMhz(80);
 
       // Sleep for 1 seconds
-      Serial.println("Entering light sleep...");
       esp_sleep_enable_timer_wakeup(1 * 1000000);  // Wake up after 1s
       esp_light_sleep_start();                     // Go into light sleep
       // Update the display if Asleep
